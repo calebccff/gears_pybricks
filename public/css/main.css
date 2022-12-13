@@ -274,7 +274,7 @@ ul.menuDropDownRightAlign {
       color: red; }
 
 .console.open {
-  height: 10em; }
+  height: 20em; }
   .console.open .chevron {
     top: -0.5em; }
   .console.open .chevron::before {

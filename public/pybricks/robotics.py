@@ -6,6 +6,7 @@ SENSOR_DELAY = 0.001
 import math, time
 import simPython
 import ev3dev2.motor
+from pybricks.parameters import Port, Direction, Stop, Color
 from pybricks.ev3devices import *
 
 class DriveBase:
@@ -123,7 +124,7 @@ class DriveBase:
         self.settings_turn_rate = turn_rate
         #check_turn_acceleration() # not implemented
 
-    def straight(self, distance):
+    def straight(self, distance, then=Stop.HOLD, wait=True):
         speed_sp_mms = self.straight_speed # millimetres per second
         speed_sp_rps = speed_sp_mms / self.wheel_circumference # rotations per second (wheel_circumference = wheel_diameter * pi)
         speed_sp_dps = speed_sp_rps * 360 # dps = degrees per second
@@ -234,7 +235,7 @@ class DriveBase:
 
         self.reset()
 
-    def turn(self, angle): # pivot turn
+    def turn(self, angle, then=Stop.HOLD, wait=True): # pivot turn
         '''
             Robot:
             b = robotWheelbase
@@ -313,8 +314,10 @@ class DriveBase:
 
         self.pivot_turn_angle = angle
 
+        brake = then == Stop.HOLD
+
         (left_speed, right_speed) = get_speed_steering(steering=100, speed=getSpeedDPSObj())
-        self.tank_drive.on_for_degrees(ev3dev2.motor.SpeedNativeUnits(left_speed), ev3dev2.motor.SpeedNativeUnits(right_speed), degrees=getTurnInDegrees(), brake=True, block=True)
+        self.tank_drive.on_for_degrees(ev3dev2.motor.SpeedNativeUnits(left_speed), ev3dev2.motor.SpeedNativeUnits(right_speed), degrees=getTurnInDegrees(), brake=brake, block=wait)
 
     def drive(self, drive_speed, turn_rate):
         '''
@@ -473,8 +476,8 @@ class DriveBase:
 
         self.tank_drive.on(getLeftSpeedDPSObj(), getRightSpeedDPSObj())        
 
-    def stop(self):
-        self.tank_drive.off(motors=None, brake=True)
+    def stop(self, brake=True):
+        self.tank_drive.off(motors=None, brake=brake)
 
     def distance(self):   
         '''

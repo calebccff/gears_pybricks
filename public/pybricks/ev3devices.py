@@ -312,7 +312,8 @@ class UltrasonicSensor:
 
     def distance(self): # in cm not mm
         time.sleep(SENSOR_DELAY)
-        return float(self.sensor.dist())
+        d = self.sensor.dist()
+        return float(d)
 
     @property
     def presence(self):

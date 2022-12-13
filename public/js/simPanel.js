@@ -432,7 +432,7 @@ var simPanel = new function() {
       let world = worlds.find(world => world.name == $select.val());
       let saveObj = {
         worldName: $select.val(),
-        options: {}
+        options: {},
       }
       Object.assign(saveObj.options, world.defaultOptions);
       Object.assign(saveObj.options, worldOptionsSetting);
@@ -483,18 +483,26 @@ var simPanel = new function() {
     });
   };
 
+  this.waitForCheekyLoad = function() {
+    if (pythonPanel.cheekyLoaded) {
+      robot.reset();
+
+      skulpt.runPython(pythonPanel.editor.getValue());
+      self.setRunIcon('stop');
+    } else {
+      setTimeout(self.waitForCheekyLoad, 100);
+    }
+  };
+
   // Run the simulator
   this.runSim = function() {
+    pythonPanel.cheekyLoaded = false;
+    pythonPanel.cheekyLoad();
     if (skulpt.running) {
       skulpt.hardInterrupt = true;
       self.setRunIcon('run');
     } else {
-      if (! pythonPanel.modified) {
-        pythonPanel.loadPythonFromBlockly();
-      }
-      robot.reset();
-      skulpt.runPython(pythonPanel.editor.getValue());
-      self.setRunIcon('stop');
+      self.waitForCheekyLoad();
     }
   };
 
@@ -552,7 +560,10 @@ var simPanel = new function() {
   // Scroll console to bottom
   this.scrollConsoleToBottom = function() {
     var pre = self.$consoleContent[0];
-    pre.scrollTop = pre.scrollHeight - pre.clientHeight
+    if (pre.clientHeight > 4000) {
+      self.clearConsole();
+    }
+    pre.scrollTop = pre.scrollHeight - pre.clientHeight;
   };
 }
 

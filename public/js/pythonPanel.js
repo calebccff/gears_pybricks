@@ -4,6 +4,18 @@ var pythonPanel = new function() {
   this.unsaved = false;
   this.modified = false;
   this.blocklyModified = false;
+  this.cheekyLoaded = false;
+
+  this.cheekyLoad = function() {
+    $.get('/pythoncode.py', function(code, status, xhr) {
+      if (status != 'success')
+        return;
+      self.modified = true;
+      self.editor.setValue(code);
+      self.cheekyLoaded = true;
+      //setTimeout(self.continuousLoad, 300);
+    });
+  }
 
   // Run on page load
   this.init = function() {
@@ -12,6 +24,8 @@ var pythonPanel = new function() {
     self.$save.click(self.save);
 
     self.loadPythonEditor();
+
+    self.continuousLoad();
   };
 
   // Runs when panel is made active

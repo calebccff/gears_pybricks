@@ -14,6 +14,8 @@ var world_Image = new function() {
     rotation: new BABYLON.Vector3(0, 0, 0)
   };
 
+  this.groundTexture = null;
+
   this.optionsConfigurations = [
     {
       option: 'image',
@@ -108,7 +110,7 @@ var world_Image = new function() {
     wall: true,
     wallHeight: 7.7,
     wallThickness: 4.5,
-    groundFriction: 1,
+    groundFriction: 10,
     wallFriction: 0.1,
     groundRestitution: 0.0,
     wallRestitution: 0.1,
@@ -127,7 +129,7 @@ var world_Image = new function() {
     Object.assign(self.options, tmpOptions);
 
     for (let name in options) {
-      if (typeof self.options[name] == 'undefined') {
+      if (typeof self.options[name] == 'undefined' && name != 'imageFile') {
         console.log('Unrecognized option: ' + name);
       } else {
         self.options[name] = options[name];
@@ -206,8 +208,8 @@ var world_Image = new function() {
 
     return new Promise(function(resolve, reject) {
       var groundMat = new BABYLON.StandardMaterial('ground', scene);
-      var groundTexture = new BABYLON.Texture(options.image, scene);
-      groundMat.diffuseTexture = groundTexture;
+      self.groundTexture = new BABYLON.Texture(options.image, scene);
+      groundMat.diffuseTexture = self.groundTexture;
       groundMat.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
 
       var faceUV = new Array(6);

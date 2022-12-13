@@ -2,14 +2,25 @@ var babylon = new function() {
   var self = this;
 
   this.world = worlds[0];
+  this.engine = null;
 
   // Run on page load
-  this.init = function() {
+  this.init = async function() {
+    const webGPUSupported = await BABYLON.WebGPUEngine.IsSupportedAsync;
     self.canvas = document.getElementById('renderCanvas');
-    self.engine = new BABYLON.Engine(self.canvas, true);
 
+    if (webGPUSupported) {
+      console.log('Using WebGPU!')
+      self.engine = new BABYLON.WebGPUEngine(self.canvas);
+      await engine.initAsync();
+    } else {
+      console.log("Not using webGPU :(")
+      self.engine = new BABYLON.Engine(self.canvas, true);
+    }
+
+    await Ammo();
     self.scene = self.createScene(); // Call the createScene function
-    // self.scene.debugLayer.show();
+    //self.scene.debugLayer.show();
 
     self.world.setOptions().then(function(){
       self.loadMeshes(self.scene);
@@ -107,7 +118,7 @@ var babylon = new function() {
     self.scene.dispose();
 
     self.scene = self.createScene();
-    // self.scene.debugLayer.show();
+    //self.scene.debugLayer.show();
 
     // Restore camera
     self.setCameraMode(mode);

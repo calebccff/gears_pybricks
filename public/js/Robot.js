@@ -10,6 +10,8 @@ function Robot() {
 
   this.sensorCount = 0;
   this.actuatorCount = 2;
+  // For simPython to get correct angle.
+  this.angleOffset = 0;
 
   this.playerColors =[
     new BABYLON.Color3(0.2, 0.94, 0.94),
@@ -38,6 +40,7 @@ function Robot() {
         }
         if (typeof robotStart.rotation != 'undefined') {
           startRot = robotStart.rotation;
+          self.angleOffset = startRot.y;
         }
       }
 
@@ -89,6 +92,7 @@ function Robot() {
       self.loadComponents(self.options.components, self.components, self.body);
 
       // Add Physics
+      scene.enablePhysics();
       caster.physicsImpostor = new BABYLON.PhysicsImpostor(
         caster,
         BABYLON.PhysicsImpostor.SphereImpostor,
@@ -111,7 +115,8 @@ function Robot() {
       );
 
       // Hold position if speed is too low
-      var origin = body.physicsImpostor.physicsBody.getWorldTransform().getOrigin();
+      var origin = body.physicsImpostor.physicsBody.getWorldTransform();
+      origin = origin.getOrigin();
       var lastOrigin = [
           origin.x(),
           origin.y(),

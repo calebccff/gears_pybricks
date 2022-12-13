@@ -37,18 +37,18 @@ var robotTemplates = [
     bodyEdgeToWheelCenterY: 1,
     bodyEdgeToWheelCenterZ: 2,
 
-    bodyMass: 1000,
-    wheelMass: 200,
+    bodyMass: 5000,
+    wheelMass: 600,
     casterMass: 0, // Warning: No effect due to parenting
 
-    wheelFriction: 10,
+    wheelFriction: 1,
     bodyFriction: 0,
-    casterFriction: 0, // Warning: No effect due to parenting
+    casterFriction: 5, // Warning: No effect due to parenting
 
     components: [
       {
         type: 'ColorSensor',
-        position: [0, -1, 9],
+        position: [0, -5, 9],
         rotation: [Math.PI/2, 0, 0],
         options: null
       },

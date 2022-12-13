@@ -778,6 +778,7 @@ class MoveTank(MotorSet):
     ``degrees`` while the motor on the inside will have its requested
     distance calculated according to the expected turn.
     """
+    #print(f"on_for_degrees: speed: {left_speed},{right_speed}, degrees: {degrees}, brake={brake}, block={block}")
     if not isinstance(left_speed, SpeedValue):
       if -100 <= left_speed <= 100:
         left_speed_obj = SpeedPercent(left_speed)

@@ -7,7 +7,7 @@ var skulpt = new function() {
     Sk.configure({
       output: self.outf,
       read: self.builtinRead,
-      __future__: Sk.python3
+      //__future__: Sk.python3
     });
     Sk.execLimit = 5000;
   };
@@ -39,11 +39,8 @@ var skulpt = new function() {
       },
       function(err) {
         self.running = false;
-        if (err instanceof Sk.builtin.ExternalError) {
-          console.log(err.toString());
-        } else {
-          simPanel.consoleWriteErrors(err.toString());
-        }
+        console.log(err.toString() + "\n" + err.traceback?.map((e) => "At " + e.filename + ":" + e.lineno + ":" + e.colno).join("\n"));
+        simPanel.consoleWriteErrors(err.toString() + "\n" + err.traceback.map((e) => "At " + e.filename + ":" + e.lineno + ":" + e.colno).join("\n"));
         clearInterval(resetExecStart);
         simPanel.setRunIcon('run');
       }
@@ -81,7 +78,8 @@ var skulpt = new function() {
       './ev3dev2/sensor/__init__.py': 'ev3dev2/sensor/__init__.py?v=1596843175',
       './ev3dev2/sensor/lego.py': 'ev3dev2/sensor/lego.py?v=1596843175',
       './ev3dev2/sensor/virtual.py': 'ev3dev2/sensor/virtual.py?v=1596843175',
-      './simPython.js': 'js/simPython.js?v=1596843175'
+      './simPython.js': 'js/simPython.js?v=1596843175',
+      './debugger.js': 'skulpt/debugger.js?v=1596843175',
     }
     if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][filename] === undefined) {
       if (filename in externalLibs) {

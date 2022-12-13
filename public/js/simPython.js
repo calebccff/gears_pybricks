@@ -1,6 +1,8 @@
 /* global Sk, sim */
 /* exported $builtinmodule */
 
+console.log("Loaded simPython.js")
+
 var $builtinmodule = function(name) {
   var mod = {};
   mod.Robot = Sk.misceval.buildClass(mod, function($gbl, $loc) {
@@ -20,9 +22,9 @@ var $builtinmodule = function(name) {
     $loc.angle = new Sk.builtin.func(function(self) {
       // returns robot angle in degrees
       let angles = robot.body.absoluteRotationQuaternion.toEulerAngles();
-      let rot = Math.round(angles.y / Math.PI * 1800) / 10;
+      let rot = Math.round((angles.y - robot.angleOffset) / Math.PI * 1800) / 10;
 
-      return rot;
+      return new Sk.builtin.int_(rot);
     });
   }, 'Robot', []);
 
@@ -75,35 +77,35 @@ var $builtinmodule = function(name) {
       if (typeof stop_action != 'undefined') {
         self.motor.stop_action = stop_action.v;
       } else {
-        return self.motor.stop_action;
+        return new Sk.builtin.int_(self.motor.stop_action);
       }
     });
 
     $loc.state = new Sk.builtin.func(function(self) {
-      return self.motor.state;
+      return new Sk.builtin.str(self.motor.state);
     });
 
     $loc.speed_sp = new Sk.builtin.func(function(self, speed_sp) {
       if (typeof speed_sp != 'undefined') {
         self.motor.speed_sp = speed_sp.v;
       } else {
-        return self.motor.speed_sp;
+        return new Sk.builtin.int_(self.motor.speed_sp);
       }
     });
 
     $loc.speed = new Sk.builtin.func(function(self) {
-      return self.motor.speed;
+      return new Sk.builtin.float_(self.motor.speed);
     });
 
     $loc.max_speed = new Sk.builtin.func(function(self) {
-      return self.motor.max_speed;
+      return new Sk.builtin.float_(self.motor.max_speed);
     });        
 
     $loc.time_sp = new Sk.builtin.func(function(self, time_sp) {
       if (typeof time_sp != 'undefined') {
         self.motor.time_sp = time_sp.v;
       } else {
-        return self.motor.time_sp;
+        return new Sk.builtin.int_(self.motor.time_sp);
       }
     });
 
@@ -113,7 +115,12 @@ var $builtinmodule = function(name) {
         self.motor.position = pos.v;
         self.motor.prevPosition = pos.v % 360;
       } else {
-        return self.motor.position;
+        try {
+          return new Sk.builtin.float_(self.motor.position);
+        } catch (e) {
+          console.log(e);
+          return new Sk.builtin.float_(0);
+        }
       }
     });
 
@@ -121,7 +128,7 @@ var $builtinmodule = function(name) {
       if (typeof polarity != 'undefined') {
         self.motor.polarity = polarity.v;
       } else {
-        return self.motor.polarity;
+        return new Sk.builtin.int_(self.motor.polarity);
       }
     });
 
@@ -129,7 +136,7 @@ var $builtinmodule = function(name) {
       if (typeof position_sp != 'undefined') {
         self.motor.position_sp = position_sp.v;
       } else {
-        return self.motor.position_sp;
+        return new Sk.builtin.int_(self.motor.position_sp);
       }
     });
 
@@ -139,12 +146,12 @@ var $builtinmodule = function(name) {
 
     $loc.wheelDiameter = new Sk.builtin.func(function(self) {
       // returns wheelDiameter in millimetres
-      return robot.options.wheelDiameter * 10;
+      return new Sk.builtin.int_(robot.options.wheelDiameter * 10);
     });   
 
     $loc.wheelRadius = new Sk.builtin.func(function(self) {
       // returns wheelRadius in millimetres    
-      return robot.options.wheelDiameter / 2 * 10;
+      return new Sk.builtin.int_(robot.options.wheelDiameter / 2 * 10);
     });   
   
     // !!!!!!
@@ -155,6 +162,7 @@ var $builtinmodule = function(name) {
     var self = this;
 
     $loc.__init__ = new Sk.builtin.func(function(self, address) {
+      console.log("Init color sensor!");
       self.sensor = robot.getComponentByPort(address.v);
       if (!self.sensor) {
         throw new Sk.builtin.TypeError('No color sensor connected to ' + String(address.v));
@@ -162,7 +170,8 @@ var $builtinmodule = function(name) {
     });
 
     $loc.value = new Sk.builtin.func(function(self) {
-      return self.sensor.getRGB();
+      list = new Sk.builtin.list(self.sensor.getRGB().map((e) => new Sk.builtin.int_(e)));
+      return list;
     });
 
     $loc.valueLAB = new Sk.builtin.func(function(self) {
@@ -197,7 +206,7 @@ var $builtinmodule = function(name) {
       lab[1] = 500 * (xyz[0] - xyz[1]);
       lab[2] = 200 * (xyz[1] - xyz[2]);
 
-      return lab;
+      return new Sk.builtin.list(lab.map((e) => new Sk.builtin.float_(e)));
     });
 
     $loc.valueHSV = new Sk.builtin.func(function(self) {
@@ -234,7 +243,7 @@ var $builtinmodule = function(name) {
 
       hsv[2] = cMax * 100;
 
-      return hsv;
+      return new Sk.builtin.list(hsv.map((e) => new Sk.builtin.float_(e)));
     });
 
     $loc.valueHLS = new Sk.builtin.func(function(self) {
@@ -275,7 +284,7 @@ var $builtinmodule = function(name) {
 
       hls[1] = (cMax + cMin) / 2 * 100;
 
-      return hls;
+      return new Sk.builtin.list(hls.map((e) => new Sk.builtin.int_(e)));
     });
 
   }, 'ColorSensor', []);
@@ -296,7 +305,7 @@ var $builtinmodule = function(name) {
       gyro[0] = Math.round(self.sensor.getAngle());
       gyro[1] = Math.round(self.sensor.getRate());
 
-      return gyro;
+      return new Sk.builtin.list(gyro.map((e) => new Sk.builtin.int_(e)));
     });
 
     $loc.reset = new Sk.builtin.func(function(self) {
@@ -320,7 +329,7 @@ var $builtinmodule = function(name) {
 
       position = self.sensor.getPosition();
 
-      return position;
+      return new Sk.builtin.list(position.map((e) => new Sk.builtin.float_(e)));
     });
 
     $loc.reset = new Sk.builtin.func(function(self) {
@@ -341,7 +350,7 @@ var $builtinmodule = function(name) {
     });
 
     $loc.dist = new Sk.builtin.func(function(self) {
-      return Sk.ffi.basicwrap(self.sensor.getDistance());
+      return new Sk.builtin.float_(self.sensor.getDistance());
     });
 
   }, 'UltrasonicSensor', []);

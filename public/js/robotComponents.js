@@ -87,9 +87,11 @@ function ColorSensor(scene, parent, pos, rot, port, options) {
     );
     self.renderTarget.clearColor = BABYLON.Color3.Black();
     scene.customRenderTargets.push(self.renderTarget);
+    //self.rttCam.outputRenderTarget = self.renderTarget;
     self.renderTarget.activeCamera = self.rttCam;
-    // self.renderTarget.refreshRate = BABYLON.RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
+    //self.renderTarget.refreshRate = BABYLON.RenderTargetTexture.REFRESHRATE_RENDER_ONCE;
 
+    self.oldBuf = null;
     self.pixels = new Uint8Array(self.options.sensorResolution ** 2 * 4);
     self.waitingSync = false;
 
@@ -170,8 +172,28 @@ function ColorSensor(scene, parent, pos, rot, port, options) {
 
   this.render = function(delta) {
     self.rttCam.rotationQuaternion = self.body.absoluteRotationQuaternion;
-    if (! self.waitingSync && babylon.engine._webGLVersion >= 2) {
-      self.readPixelsAsync();
+    if (!self.waitingSync && babylon.engine._webGLVersion >= 2) {
+      self.waitingSync = true;
+      //console.log(texture)
+      let width, height = self.options.sensorResolution;
+      //let texture = BABYLON.CreateResizedCopy(targetTex, width, height, true);
+      self.renderTarget.readPixels(x=0, y=0, width=width, height=height).then(
+        // Fulfilled
+        (buf) => {
+          self.waitingSync = false;
+          self.oldBuf = self.pixels;
+          self.pixels = new Uint8Array(buf);
+          //self.pixels = self.pixels.filter((_, i) => self.mask[i]);
+          //console.log(self.pixels.filter((p, i) => self.mask[i] && p > 0));
+          //console.log(self.renderTarget)
+        },
+        // Rejected
+        () => {
+          console.log('Error reading pixels from texture')
+          self.waitingSync = false;
+          //self.pixels = self.pixels.filter((_, i) => self.mask[i]);
+        }
+      )
     }
   };
 
@@ -201,6 +223,18 @@ function ColorSensor(scene, parent, pos, rot, port, options) {
     const engine = babylon.engine;
 
     let gl = engine._gl;
+
+
+  }
+
+  this.readPixelsAsyncOLD = function() {
+    let texture = self.renderTarget._texture;
+    let width = self.options.sensorResolution;
+    let height = self.options.sensorResolution;
+
+    const engine = babylon.engine;
+
+    let gl = engine._gl;
     let dummy = babylon.engine._gl.createFramebuffer();
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, dummy);
@@ -220,8 +254,13 @@ function ColorSensor(scene, parent, pos, rot, port, options) {
     const buf = gl.createBuffer();
     gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
     gl.bufferData(gl.PIXEL_PACK_BUFFER, self.pixels.byteLength, gl.STREAM_READ);
+    //console.log(gl.checkFramebufferStatus(gl.FRAMEBUFFER));
     gl.readPixels(0, 0, width, height, gl.RGBA, readType, 0);
-    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, engine._currentFramebuffer);
+    //console.log(self.pixels);
+    //gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+
+    //console.log("Read pixels!");
 
     const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
     if (!sync) {
@@ -254,8 +293,8 @@ function ColorSensor(scene, parent, pos, rot, port, options) {
       let check = () => {
         const res = gl.clientWaitSync(sync, flags, 0);
         if (res == gl.WAIT_FAILED) {
-          // reject();
-          resolve();
+          reject();
+          //resolve();
           return;
         }
         if (res == gl.TIMEOUT_EXPIRED) {
@@ -274,8 +313,9 @@ function ColorSensor(scene, parent, pos, rot, port, options) {
     var g = 0;
     var b = 0;
 
-    // self.renderTarget.resetRefreshCounter();
+    //self.renderTarget.resetRefreshCounter();
     if (babylon.engine._webGLVersion < 2) {
+      console.log("Before readPixels webgl 1")
       self.renderTarget.readPixels(0, 0, self.pixels);
     }
     for (let i=0; i<self.pixels.length; i+=4) {
@@ -288,7 +328,9 @@ function ColorSensor(scene, parent, pos, rot, port, options) {
     self.r = r;
     self.g = g;
     self.b = b;
-    return [r / self.maskSize, g / self.maskSize, b / self.maskSize];
+    val = [r / self.maskSize, g / self.maskSize, b / self.maskSize];
+    //console.log(val);
+    return val;
   };
 
   this.init();
